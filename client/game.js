@@ -11,39 +11,55 @@ let gameState = { players: {}, resources: {} };
 const keys = { w: false, a: false, s: false, d: false };
 const mouse = { x: 0, y: 0, clicked: false };
 
-// Imagens (Placeholders simples desenhados via Canvas para o MVP)
+// Carregar Imagens
+const playerImg = new Image();
+playerImg.src = 'assets/player.png';
+
+const objectsImg = new Image();
+objectsImg.src = 'assets/objects.png';
+
+// Constantes da Arte
+const SPRITE_SIZE = 16;
+const SCALE = 3; // Desenhar 3x maior (48x48)
+
+// Imagens
 function drawPlayer(x, y, isMe) {
-    ctx.fillStyle = isMe ? '#3498db' : '#e74c3c'; // Azul para mim, Vermelho para outros
-    ctx.beginPath();
-    ctx.arc(x, y, 15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#2c3e50';
-    ctx.stroke();
+    if (!playerImg.complete) return;
     
-    // "Olhos" indicando a direção (simplificado)
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(x - 5, y - 5, 4, 0, Math.PI * 2);
-    ctx.arc(x + 5, y - 5, 4, 0, Math.PI * 2);
-    ctx.fill();
+    // Para simplificar no MVP, vamos pegar apenas o primeiro frame (parado de frente)
+    // Coordenadas aproximadas (frame 0, linha 0)
+    const sx = 0;
+    const sy = 0;
+    
+    // Ajustar o ponto de desenho para que (x,y) seja o centro/pé do personagem
+    const drawX = x - (SPRITE_SIZE * SCALE) / 2;
+    const drawY = y - (SPRITE_SIZE * SCALE) + 5; 
+    
+    ctx.drawImage(playerImg, sx, sy, SPRITE_SIZE, SPRITE_SIZE, drawX, drawY, SPRITE_SIZE * SCALE, SPRITE_SIZE * SCALE);
+    
+    if (isMe) {
+        // Indicador simples de quem sou eu (triângulo pequeno em cima)
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.moveTo(x, drawY - 10);
+        ctx.lineTo(x - 5, drawY - 15);
+        ctx.lineTo(x + 5, drawY - 15);
+        ctx.fill();
+    }
 }
 
 function drawResource(x, y, active) {
-    if (!active) {
-        // Tronco cortado (Recurso aguardando respawn)
-        ctx.fillStyle = '#7f8c8d';
-        ctx.fillRect(x - 10, y - 10, 20, 20);
-        return;
-    }
+    if (!objectsImg.complete) return;
     
-    // Árvore (Recurso ativo)
-    ctx.fillStyle = '#8e44ad'; // Tronco
-    ctx.fillRect(x - 5, y - 10, 10, 20);
-    ctx.fillStyle = '#27ae60'; // Folhas
-    ctx.beginPath();
-    ctx.arc(x, y - 20, 15, 0, Math.PI * 2);
-    ctx.fill();
+    // Coordenadas aproximadas da árvore e do toco (vamos assumir que a árvore inteira tem 16x16 ou 16x32)
+    // Baseado em pacotes de pixel art comuns (ajustaremos se ficar torto)
+    let sx = active ? 0 : 16; 
+    let sy = 0; 
+    
+    const drawX = x - (SPRITE_SIZE * SCALE) / 2;
+    const drawY = y - (SPRITE_SIZE * SCALE);
+    
+    ctx.drawImage(objectsImg, sx, sy, SPRITE_SIZE, SPRITE_SIZE, drawX, drawY, SPRITE_SIZE * SCALE, SPRITE_SIZE * SCALE);
 }
 
 function connect() {
