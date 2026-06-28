@@ -50,11 +50,15 @@ function drawBackground() {
         return;
     }
     
-    // Tentar pegar o tile que fica em x=16, y=16 (geralmente uma grama)
-    const tileSize = 16 * SCALE;
+    // Pixel Crawler usa tiles de 32x32 na maioria dos casos
+    const TILE_SRC_SIZE = 32;
+    const tileSize = TILE_SRC_SIZE * 2; // Desenhar 64x64 na tela para ficar visível
+    
+    // Tentar pegar o tile de grama pura (geralmente em 0,0 ou 32,32)
+    // Se 0,0 for transparente, 32,32 ou 0,32 costuma ser seguro. Vamos usar 32, 32
     for (let x = 0; x < canvas.width; x += tileSize) {
         for (let y = 0; y < canvas.height; y += tileSize) {
-            ctx.drawImage(bgImg, 16, 16, 16, 16, x, y, tileSize, tileSize);
+            ctx.drawImage(bgImg, 32, 32, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
         }
     }
 }
@@ -62,12 +66,10 @@ function drawBackground() {
 function drawPlayer(x, y, isMe) {
     if (!playerImg.complete || playerImg.width === 0) return;
     
-    // Pixel Crawler personagens geralmente têm frames de 32x32 ou 64x64 na folha
-    // Vamos assumir que a folha inteira é de altura 32 e largura = N frames.
-    const frameWidth = playerImg.height; // Geralmente a altura da folha é a altura do frame em sheets simples
+    const frameWidth = playerImg.height; 
     const frameHeight = playerImg.height; 
     
-    const sx = 0; // Primeiro frame
+    const sx = 0; 
     const sy = 0;
     
     const drawWidth = frameWidth * SCALE;
@@ -90,23 +92,28 @@ function drawPlayer(x, y, isMe) {
 function drawResource(x, y, active) {
     if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // Size_03.png é provavelmente uma imagem única da árvore
-    const imgW = objectsImg.width;
-    const imgH = objectsImg.height;
+    // Como vimos, Size_03.png é uma folha com várias árvores (Verão, Outono, Inverno, Morta)
+    // Se existem 4 colunas (vimos 4 árvores juntas na imagem), a largura de uma árvore é a largura total / 4.
+    const treeW = objectsImg.width / 4;
+    const treeH = objectsImg.height;
     
-    const drawWidth = imgW * 2; // Escala ajustada para não ficar gigante
-    const drawHeight = imgH * 2;
+    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0.
+    const sx = 0;
+    const sy = 0;
+    
+    const drawWidth = treeW * 2; 
+    const drawHeight = treeH * 2;
     
     const drawX = x - drawWidth / 2;
-    const drawY = y - drawHeight + 15;
+    const drawY = y - drawHeight + 30; // Ajustado para a base do tronco ficar na coordenada
     
     if (active) {
         ctx.globalAlpha = 1.0;
-        ctx.drawImage(objectsImg, 0, 0, imgW, imgH, drawX, drawY, drawWidth, drawHeight);
+        ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
     } else {
-        // Árvore cortada
+        // Árvore cortada - desenha a mesma árvore porém transparente para o MVP
         ctx.globalAlpha = 0.3;
-        ctx.drawImage(objectsImg, 0, 0, imgW, imgH, drawX, drawY, drawWidth, drawHeight);
+        ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
     }
 }
