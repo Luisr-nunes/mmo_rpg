@@ -33,6 +33,20 @@ init_resources()
 
 connected_clients = set()
 
+def get_network_state():
+    players_list = []
+    for k, v in game_state["players"].items():
+        players_list.append({"id": k, "name": v["name"], "x": float(v["x"]), "y": float(v["y"])})
+        
+    resources_list = []
+    for k, v in game_state["resources"].items():
+        resources_list.append({"id": k, "type": v["type"], "x": float(v["x"]), "y": float(v["y"]), "active": v["active"]})
+        
+    return {
+        "players": players_list,
+        "resources": resources_list
+    }
+
 async def broadcast(message):
     if connected_clients:
         await asyncio.gather(*[client.send(message) for client in connected_clients])
@@ -48,7 +62,7 @@ async def game_loop():
                 resources_changed = True
                 
         if resources_changed:
-            await broadcast(json.dumps({"type": "game_state", "state": game_state}))
+            await broadcast(json.dumps({"type": "game_state", "state": get_network_state()}))
             
         await asyncio.sleep(1)
 
@@ -67,10 +81,10 @@ async def handler(websocket):
         await websocket.send(json.dumps({
             "type": "init",
             "id": player_id,
-            "state": game_state
+            "state": get_network_state()
         }))
         
-        await broadcast(json.dumps({"type": "game_state", "state": game_state}))
+        await broadcast(json.dumps({"type": "game_state", "state": get_network_state()}))
 
         async for message in websocket:
             data = json.loads(message)
@@ -79,7 +93,7 @@ async def handler(websocket):
                 game_state["players"][player_id]["x"] = max(0, min(WORLD_WIDTH, data["x"]))
                 game_state["players"][player_id]["y"] = max(0, min(WORLD_HEIGHT, data["y"]))
                 
-                await broadcast(json.dumps({"type": "game_state", "state": game_state}))
+                await broadcast(json.dumps({"type": "game_state", "state": get_network_state()}))
                 
             elif data["type"] == "collect":
                 res_id = data["resource_id"]
@@ -119,14 +133,15 @@ async def handler(websocket):
                                 "y": py
                             }))
                             
-                            await broadcast(json.dumps({"type": "game_state", "state": game_state}))
+                            await broadcast(json.dumps({"type": "game_state", "state": get_network_state()}))
                             
     except websockets.exceptions.ConnectionClosed:
         pass
     finally:
         connected_clients.remove(websocket)
-        del game_state["players"][player_id]
-        await broadcast(json.dumps({"type": "game_state", "state": game_state}))
+        if player_id in game_state["players"]:
+            del game_state["players"][player_id]
+        await broadcast(json.dumps({"type": "game_state", "state": get_network_state()}))
 
 async def main():
     server = await websockets.serve(handler, "localhost", 8765)
