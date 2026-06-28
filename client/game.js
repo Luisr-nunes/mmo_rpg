@@ -44,19 +44,19 @@ function addFloatingText(text, x, y, color) {
 }
 
 function drawBackground() {
-    if (!bgImg.complete) {
-        ctx.fillStyle = "#78a252";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        return;
-    }
+    // Fundo verde sólido para evitar buracos negros se o tile tiver bordas transparentes
+    ctx.fillStyle = "#3e702d";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // O chão do Mystic Woods é apenas uma imagem única de grama
-    const TILE_SRC_SIZE = bgImg.width; // 16
+    if (!bgImg.complete) return;
+    
+    // Pixel Crawler grass tile geralmente fica em 16,16
+    const TILE_SRC_SIZE = 16;
     const tileSize = TILE_SRC_SIZE * 3; // Desenhar 48x48
     
     for (let x = 0; x < canvas.width; x += tileSize) {
         for (let y = 0; y < canvas.height; y += tileSize) {
-            ctx.drawImage(bgImg, 0, 0, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
+            ctx.drawImage(bgImg, 16, 16, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
         }
     }
 }
@@ -90,27 +90,29 @@ function drawPlayer(x, y, isMe) {
 function drawResource(x, y, active) {
     if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // A árvore no pacote Mystic Woods tem exatamente 48x64 pixels e fica no canto superior esquerdo
-    const treeW = 48;
-    const treeH = 64;
+    // A folha de árvores (Size_03.png) tem 4 árvores lado a lado.
+    // A largura total é 208, logo 208 / 4 = 52 pixels por árvore.
+    // A altura total é 192 pixels. Cada árvore ocupa a altura inteira!
+    const treeW = objectsImg.width / 4; // 52
+    const treeH = objectsImg.height; // 192
     
+    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0.
     const sx = 0;
     const sy = 0;
     
-    const drawWidth = treeW * 2; 
-    const drawHeight = treeH * 2;
+    const drawWidth = treeW * 1.5; // Escala um pouco menor para não ficar gigante na tela
+    const drawHeight = treeH * 1.5;
     
     const drawX = x - drawWidth / 2;
-    const drawY = y - drawHeight + 30;
+    const drawY = y - drawHeight + 40; // Base do tronco
     
     if (active) {
         ctx.globalAlpha = 1.0;
         ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
     } else {
-        // Árvore cortada
-        ctx.globalAlpha = 0.3;
-        ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
-        ctx.globalAlpha = 1.0;
+        // Árvore cortada (Morta) - pegamos a última árvore (coluna 3)
+        const deadTreeX = treeW * 3;
+        ctx.drawImage(objectsImg, deadTreeX, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
     }
 }
 
