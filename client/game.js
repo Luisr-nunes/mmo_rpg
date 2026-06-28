@@ -90,17 +90,17 @@ function drawPlayer(x, y, isMe) {
 function drawResource(x, y, active) {
     if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // A folha de árvores (Size_03.png) tem 4 árvores lado a lado.
+    // A folha de árvores (Size_03.png) tem 4 colunas e 3 linhas.
     // A largura total é 208, logo 208 / 4 = 52 pixels por árvore.
-    // A altura total é 192 pixels. Cada árvore ocupa a altura inteira!
+    // A altura total é 192 pixels. Cada árvore ocupa 1/3, ou seja, 64 pixels!
     const treeW = objectsImg.width / 4; // 52
-    const treeH = objectsImg.height; // 192
+    const treeH = objectsImg.height / 3; // 64
     
-    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0.
+    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0, linha 0.
     const sx = 0;
     const sy = 0;
     
-    const drawWidth = treeW * 1.5; // Escala um pouco menor para não ficar gigante na tela
+    const drawWidth = treeW * 1.5; // Escala
     const drawHeight = treeH * 1.5;
     
     const drawX = x - drawWidth / 2;
