@@ -9,11 +9,14 @@ public class PlayerController : MonoBehaviour
     // Lista de árvores na área para coletar
     private List<string> nearbyResources = new List<string>();
 
-    private Animator animator;
+    public Sprite[] sprites;
+    private SpriteRenderer spriteRenderer;
+    private float animationTimer = 0f;
+    private int currentFrame = 0;
 
     void Start()
     {
-        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -39,13 +42,29 @@ public class PlayerController : MonoBehaviour
         
         bool isWalking = (dx != 0 || dy != 0);
         
-        if (animator != null)
+        // Animação via Código!
+        if (sprites != null && sprites.Length > 1 && spriteRenderer != null)
         {
-            animator.SetBool("isWalking", isWalking);
             if (isWalking)
             {
-                animator.SetFloat("dirX", dx);
-                animator.SetFloat("dirY", dy);
+                animationTimer += Time.deltaTime;
+                if (animationTimer >= 0.15f) // Troca de quadro a cada 0.15s
+                {
+                    animationTimer = 0f;
+                    currentFrame++;
+                    if (currentFrame >= sprites.Length) currentFrame = 1; // 1 ao invés de 0 para pular o frame de "Parado"
+                    spriteRenderer.sprite = sprites[currentFrame];
+                }
+                
+                // Vira o boneco para a esquerda ou direita
+                if (dx < 0) spriteRenderer.flipX = true;
+                else if (dx > 0) spriteRenderer.flipX = false;
+            }
+            else
+            {
+                // Parado (Idle)
+                spriteRenderer.sprite = sprites[0];
+                currentFrame = 0;
             }
         }
         

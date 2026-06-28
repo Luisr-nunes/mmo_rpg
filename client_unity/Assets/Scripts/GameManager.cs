@@ -96,7 +96,8 @@ public class GameManager : MonoBehaviour
                 // O local player pode ter uma cor ou tag diferente
                 if (pData.id == NetworkManager.Instance.myId)
                 {
-                    pObj.AddComponent<PlayerController>(); // Anexa controle de movimento
+                    var pc = pObj.AddComponent<PlayerController>(); // Anexa controle de movimento
+                    pc.sprites = playerSprites; // Passa os sprites fatiados para a animação
                     
                     // Adiciona física para detectar quando esbarra na árvore
                     var rb = pObj.AddComponent<Rigidbody2D>();
