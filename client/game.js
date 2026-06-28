@@ -50,31 +50,32 @@ function drawBackground() {
         return;
     }
     
-    // Desenhar um chão de grama repetido
-    // A tile "Floors_Tiles.png" costuma ter grama no primeiro bloco (0,0)
+    // Tentar pegar o tile que fica em x=16, y=16 (geralmente uma grama)
     const tileSize = 16 * SCALE;
     for (let x = 0; x < canvas.width; x += tileSize) {
         for (let y = 0; y < canvas.height; y += tileSize) {
-            ctx.drawImage(bgImg, 0, 0, 16, 16, x, y, tileSize, tileSize);
+            ctx.drawImage(bgImg, 16, 16, 16, 16, x, y, tileSize, tileSize);
         }
     }
 }
 
 function drawPlayer(x, y, isMe) {
-    if (!playerImg.complete) return;
+    if (!playerImg.complete || playerImg.width === 0) return;
     
-    // Desenhar o primeiro frame da animação Idle (Pixel Crawler)
-    // Em pacotes de PC, os personagens costumam ser 32x32 na folha, mesmo que digam 16x16 (que é o tamanho base do tile)
-    // Mas vamos tentar 16x16 primeiro conforme discutido
-    const sx = 0;
+    // Pixel Crawler personagens geralmente têm frames de 32x32 ou 64x64 na folha
+    // Vamos assumir que a folha inteira é de altura 32 e largura = N frames.
+    const frameWidth = playerImg.height; // Geralmente a altura da folha é a altura do frame em sheets simples
+    const frameHeight = playerImg.height; 
+    
+    const sx = 0; // Primeiro frame
     const sy = 0;
     
-    const drawWidth = SPRITE_WIDTH * SCALE;
-    const drawHeight = SPRITE_HEIGHT * SCALE;
+    const drawWidth = frameWidth * SCALE;
+    const drawHeight = frameHeight * SCALE;
     const drawX = x - drawWidth / 2;
-    const drawY = y - drawHeight + 5; 
+    const drawY = y - drawHeight + 10; 
     
-    ctx.drawImage(playerImg, sx, sy, SPRITE_WIDTH, SPRITE_HEIGHT, drawX, drawY, drawWidth, drawHeight);
+    ctx.drawImage(playerImg, sx, sy, frameWidth, frameHeight, drawX, drawY, drawWidth, drawHeight);
     
     if (isMe) {
         ctx.fillStyle = '#f1c40f';
@@ -87,25 +88,25 @@ function drawPlayer(x, y, isMe) {
 }
 
 function drawResource(x, y, active) {
-    if (!objectsImg.complete) return;
+    if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // Pixel Crawler Tree
-    const drawWidth = 32 * SCALE; // Arvores costumam ser 32x32 ou maiores
-    const drawHeight = 32 * SCALE;
+    // Size_03.png é provavelmente uma imagem única da árvore
+    const imgW = objectsImg.width;
+    const imgH = objectsImg.height;
     
-    const sx = 0; 
-    const sy = 0; 
+    const drawWidth = imgW * 2; // Escala ajustada para não ficar gigante
+    const drawHeight = imgH * 2;
     
     const drawX = x - drawWidth / 2;
-    const drawY = y - drawHeight + 10;
+    const drawY = y - drawHeight + 15;
     
     if (active) {
         ctx.globalAlpha = 1.0;
-        ctx.drawImage(objectsImg, sx, sy, 32, 32, drawX, drawY, drawWidth, drawHeight);
+        ctx.drawImage(objectsImg, 0, 0, imgW, imgH, drawX, drawY, drawWidth, drawHeight);
     } else {
-        // Se foi cortada, vamos desenhar translúcida para o MVP
+        // Árvore cortada
         ctx.globalAlpha = 0.3;
-        ctx.drawImage(objectsImg, sx, sy, 32, 32, drawX, drawY, drawWidth, drawHeight);
+        ctx.drawImage(objectsImg, 0, 0, imgW, imgH, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
     }
 }
