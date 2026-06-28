@@ -50,13 +50,13 @@ function drawBackground() {
         return;
     }
     
-    // O chão do Pixel Crawler (grass tile) está em x=256, y=0 e é 16x16
-    const TILE_SRC_SIZE = 16;
-    const tileSize = TILE_SRC_SIZE * 3; // Desenhar 48x48 na tela para ficar bom
+    // O chão do Mystic Woods é apenas uma imagem única de grama
+    const TILE_SRC_SIZE = bgImg.width; // 16
+    const tileSize = TILE_SRC_SIZE * 3; // Desenhar 48x48
     
     for (let x = 0; x < canvas.width; x += tileSize) {
         for (let y = 0; y < canvas.height; y += tileSize) {
-            ctx.drawImage(bgImg, 256, 0, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
+            ctx.drawImage(bgImg, 0, 0, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
         }
     }
 }
@@ -90,11 +90,10 @@ function drawPlayer(x, y, isMe) {
 function drawResource(x, y, active) {
     if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // A folha de árvores tem 4 colunas e 3 linhas
-    const treeW = objectsImg.width / 4; // 52
-    const treeH = objectsImg.height / 3; // 64
+    // A árvore no pacote Mystic Woods tem exatamente 48x64 pixels e fica no canto superior esquerdo
+    const treeW = 48;
+    const treeH = 64;
     
-    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0, linha 0.
     const sx = 0;
     const sy = 0;
     
@@ -102,13 +101,13 @@ function drawResource(x, y, active) {
     const drawHeight = treeH * 2;
     
     const drawX = x - drawWidth / 2;
-    const drawY = y - drawHeight + 30; // Ajustado para a base do tronco ficar na coordenada
+    const drawY = y - drawHeight + 30;
     
     if (active) {
         ctx.globalAlpha = 1.0;
         ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
     } else {
-        // Árvore cortada (Morta) - pegamos a última árvore (coluna 3) ou apenas deixamos translúcida
+        // Árvore cortada
         ctx.globalAlpha = 0.3;
         ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
