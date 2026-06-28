@@ -50,15 +50,13 @@ function drawBackground() {
         return;
     }
     
-    // Pixel Crawler usa tiles de 32x32 na maioria dos casos
-    const TILE_SRC_SIZE = 32;
-    const tileSize = TILE_SRC_SIZE * 2; // Desenhar 64x64 na tela para ficar visível
+    // O chão do Pixel Crawler (grass tile) está em x=256, y=0 e é 16x16
+    const TILE_SRC_SIZE = 16;
+    const tileSize = TILE_SRC_SIZE * 3; // Desenhar 48x48 na tela para ficar bom
     
-    // Tentar pegar o tile de grama pura (geralmente em 0,0 ou 32,32)
-    // Se 0,0 for transparente, 32,32 ou 0,32 costuma ser seguro. Vamos usar 32, 32
     for (let x = 0; x < canvas.width; x += tileSize) {
         for (let y = 0; y < canvas.height; y += tileSize) {
-            ctx.drawImage(bgImg, 32, 32, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
+            ctx.drawImage(bgImg, 256, 0, TILE_SRC_SIZE, TILE_SRC_SIZE, x, y, tileSize, tileSize);
         }
     }
 }
@@ -92,12 +90,11 @@ function drawPlayer(x, y, isMe) {
 function drawResource(x, y, active) {
     if (!objectsImg.complete || objectsImg.width === 0) return;
     
-    // Como vimos, Size_03.png é uma folha com várias árvores (Verão, Outono, Inverno, Morta)
-    // Se existem 4 colunas (vimos 4 árvores juntas na imagem), a largura de uma árvore é a largura total / 4.
-    const treeW = objectsImg.width / 4;
-    const treeH = objectsImg.height;
+    // A folha de árvores tem 4 colunas e 3 linhas
+    const treeW = objectsImg.width / 4; // 52
+    const treeH = objectsImg.height / 3; // 64
     
-    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0.
+    // Vamos desenhar a primeira árvore (Verde) que está na coluna 0, linha 0.
     const sx = 0;
     const sy = 0;
     
@@ -111,7 +108,7 @@ function drawResource(x, y, active) {
         ctx.globalAlpha = 1.0;
         ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
     } else {
-        // Árvore cortada - desenha a mesma árvore porém transparente para o MVP
+        // Árvore cortada (Morta) - pegamos a última árvore (coluna 3) ou apenas deixamos translúcida
         ctx.globalAlpha = 0.3;
         ctx.drawImage(objectsImg, sx, sy, treeW, treeH, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
