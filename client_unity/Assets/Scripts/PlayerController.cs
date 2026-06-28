@@ -9,6 +9,13 @@ public class PlayerController : MonoBehaviour
     // Lista de árvores na área para coletar
     private List<string> nearbyResources = new List<string>();
 
+    private Animator animator;
+
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
+
     void Update()
     {
         float dx = 0;
@@ -30,7 +37,19 @@ public class PlayerController : MonoBehaviour
             }
         }
         
-        if (dx != 0 || dy != 0)
+        bool isWalking = (dx != 0 || dy != 0);
+        
+        if (animator != null)
+        {
+            animator.SetBool("isWalking", isWalking);
+            if (isWalking)
+            {
+                animator.SetFloat("dirX", dx);
+                animator.SetFloat("dirY", dy);
+            }
+        }
+        
+        if (isWalking)
         {
             // Normaliza para não andar mais rápido nas diagonais
             Vector2 dir = new Vector2(dx, dy).normalized;

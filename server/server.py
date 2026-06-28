@@ -36,7 +36,13 @@ connected_clients = set()
 def get_network_state():
     players_list = []
     for k, v in game_state["players"].items():
-        players_list.append({"id": k, "name": v["name"], "x": float(v["x"]), "y": float(v["y"])})
+        players_list.append({
+            "id": k, 
+            "name": v["name"], 
+            "x": float(v["x"]), 
+            "y": float(v["y"]),
+            "wood": v["inventory"].get("wood", 0)
+        })
         
     resources_list = []
     for k, v in game_state["resources"].items():

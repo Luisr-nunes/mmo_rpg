@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,7 +12,8 @@ public class GameManager : MonoBehaviour
     private Sprite[] playerSprites;
     private Sprite[] treeSprites;
 
-    public Text uiText; // Pode ser arrastado no editor depois
+    public TextMeshProUGUI uiText; // Texto do inventário (Arraste no editor)
+    public TextMeshProUGUI rollText; // Texto do D20 (Arraste no editor)
 
     void Awake()
     {
@@ -45,10 +46,32 @@ public class GameManager : MonoBehaviour
         UpdatePlayers(state.players);
         UpdateTrees(state.resources);
         
-        // Atualiza a UI se o componente estiver conectado
+        // Atualiza a UI do Inventário
         if (uiText != null)
         {
-            uiText.text = "Conectado. ID: " + NetworkManager.Instance.myId;
+            int myWood = 0;
+            if (state.players != null) {
+                foreach(var p in state.players) {
+                    if (p.id == NetworkManager.Instance.myId) myWood = p.wood;
+                }
+            }
+            uiText.text = "Madeiras: " + myWood;
+        }
+        
+        // Atualiza a UI do D20
+        if (rollText != null)
+        {
+            if (Time.time - NetworkManager.Instance.lastRollTime < 3f) // Mostra o roll por 3 segundos
+            {
+                if (NetworkManager.Instance.lastRollSuccess)
+                    rollText.text = "<color=green>D20: " + NetworkManager.Instance.lastRoll + " (Sucesso!)</color>";
+                else
+                    rollText.text = "<color=red>D20: " + NetworkManager.Instance.lastRoll + " (Falha)</color>";
+            }
+            else
+            {
+                rollText.text = ""; // Esconde depois de 3 segundos
+            }
         }
     }
 

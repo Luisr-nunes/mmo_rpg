@@ -17,6 +17,7 @@ public class PlayerData {
     public string name;
     public float x;
     public float y;
+    public int wood;
 }
 
 [Serializable]
@@ -34,10 +35,10 @@ public class ServerMessage {
     public string id; // Usado no pacote init
     public GameState state;
     
-    // Usado no pacote roll_result
+    // Usado no pacote dice_roll
     public string player_id;
     public int roll;
-    public bool success;
+    public int amount;
     public string resource_type;
 }
 
@@ -64,6 +65,10 @@ public class NetworkManager : MonoBehaviour
     
     public string myId = "";
     public GameState currentState;
+    
+    public int lastRoll = 0;
+    public bool lastRollSuccess = false;
+    public float lastRollTime = -10f;
 
     void Awake()
     {
@@ -96,30 +101,37 @@ public class NetworkManager : MonoBehaviour
 
     async void ReceiveLoop()
     {
-        var buffer = new byte[16384];
+        var buffer = new byte[8192];
         while (ws.State == WebSocketState.Open)
         {
-            var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token);
-            if (result.MessageType == WebSocketMessageType.Text)
+            using (var ms = new System.IO.MemoryStream())
             {
-                string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                mainThreadActions.Enqueue(() => ProcessMessage(json));
+                System.Net.WebSockets.WebSocketReceiveResult result;
+                do
+                {
+                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token);
+                    ms.Write(buffer, 0, result.Count);
+                } while (!result.EndOfMessage);
+
+                if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Text)
+                {
+                    string json = Encoding.UTF8.GetString(ms.ToArray());
+                    mainThreadActions.Enqueue(() => ProcessMessage(json));
+                }
             }
         }
     }
 
     void ProcessMessage(string json)
     {
-        Debug.Log("RAW JSON: " + json);
         ServerMessage msg = JsonUtility.FromJson<ServerMessage>(json);
         
-        if (msg.state != null && msg.state.players != null)
+        if (msg.type == "init" || msg.type == "game_state")
         {
-            Debug.Log("JsonUtility Parseou com Sucesso! Jogadores: " + msg.state.players.Length);
-        }
-        else
-        {
-            Debug.LogError("JsonUtility FALHOU ao extrair a lista de jogadores do JSON.");
+            if (msg.state == null || msg.state.players == null)
+            {
+                Debug.LogError("JsonUtility FALHOU ao extrair a lista de jogadores do JSON: " + json);
+            }
         }
         
         if (msg.type == "init")
@@ -133,14 +145,16 @@ public class NetworkManager : MonoBehaviour
             currentState = msg.state;
             // Aqui vamos chamar os scripts de visualização (GameManager) para atualizar a tela
         }
-        else if (msg.type == "roll_result")
+        else if (msg.type == "dice_roll")
         {
+            Debug.Log("Chegou um dice_roll! Roll: " + msg.roll + " Amount: " + msg.amount + " Player: " + msg.player_id);
             // Guarda o resultado para a UI exibir
             if (msg.player_id == myId)
             {
                 lastRoll = msg.roll;
-                lastRollSuccess = msg.success;
+                lastRollSuccess = msg.amount > 0;
                 lastRollTime = Time.time;
+                Debug.Log("D20 salvo com sucesso! Time: " + lastRollTime);
             }
         }
     }
