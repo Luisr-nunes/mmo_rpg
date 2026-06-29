@@ -25,7 +25,8 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        if (Instance == null) Instance = this;
+        gameObject.AddComponent<InventoryUI>();
     }
 
     void Start()
