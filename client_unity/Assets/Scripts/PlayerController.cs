@@ -9,10 +9,20 @@ public class PlayerController : MonoBehaviour
     // Lista de árvores na área para coletar
     private List<string> nearbyResources = new List<string>();
 
-    public Sprite[] sprites;
+    public Sprite[] idleDown;
+    public Sprite[] idleUp;
+    public Sprite[] idleSide;
+    
+    public Sprite[] walkDown;
+    public Sprite[] walkUp;
+    public Sprite[] walkSide;
+
     private SpriteRenderer spriteRenderer;
     private float animationTimer = 0f;
     private int currentFrame = 0;
+    
+    // 0 = Down, 1 = Up, 2 = Side
+    private int facingDirection = 0; 
 
     void Start()
     {
@@ -42,29 +52,43 @@ public class PlayerController : MonoBehaviour
         
         bool isWalking = (dx != 0 || dy != 0);
         
-        // Animação via Código!
-        if (sprites != null && sprites.Length > 1 && spriteRenderer != null)
+        // Atualiza a direção que o personagem está olhando
+        if (dx != 0) facingDirection = 2; // Side
+        else if (dy > 0) facingDirection = 1; // Up
+        else if (dy < 0) facingDirection = 0; // Down
+        
+        if (dx < 0 && spriteRenderer != null) spriteRenderer.flipX = true;
+        else if (dx > 0 && spriteRenderer != null) spriteRenderer.flipX = false;
+        
+        // Seleciona a Array correta de sprites baseado no estado
+        Sprite[] currentArray = null;
+        if (isWalking)
         {
-            if (isWalking)
+            if (facingDirection == 0) currentArray = walkDown;
+            else if (facingDirection == 1) currentArray = walkUp;
+            else currentArray = walkSide;
+        }
+        else
+        {
+            if (facingDirection == 0) currentArray = idleDown;
+            else if (facingDirection == 1) currentArray = idleUp;
+            else currentArray = idleSide;
+        }
+        
+        // Animação via Código!
+        if (currentArray != null && currentArray.Length > 0 && spriteRenderer != null)
+        {
+            animationTimer += Time.deltaTime;
+            
+            // Walk geralmente é mais rápido. Idle é mais devagar.
+            float frameSpeed = isWalking ? 0.1f : 0.2f; 
+            
+            if (animationTimer >= frameSpeed) 
             {
-                animationTimer += Time.deltaTime;
-                if (animationTimer >= 0.15f) // Troca de quadro a cada 0.15s
-                {
-                    animationTimer = 0f;
-                    currentFrame++;
-                    if (currentFrame >= sprites.Length) currentFrame = 1; // 1 ao invés de 0 para pular o frame de "Parado"
-                    spriteRenderer.sprite = sprites[currentFrame];
-                }
-                
-                // Vira o boneco para a esquerda ou direita
-                if (dx < 0) spriteRenderer.flipX = true;
-                else if (dx > 0) spriteRenderer.flipX = false;
-            }
-            else
-            {
-                // Parado (Idle)
-                spriteRenderer.sprite = sprites[0];
-                currentFrame = 0;
+                animationTimer = 0f;
+                currentFrame++;
+                if (currentFrame >= currentArray.Length) currentFrame = 0; 
+                spriteRenderer.sprite = currentArray[currentFrame];
             }
         }
         

@@ -9,8 +9,16 @@ public class GameManager : MonoBehaviour
     private Dictionary<string, GameObject> playerObjects = new Dictionary<string, GameObject>();
     private Dictionary<string, GameObject> treeObjects = new Dictionary<string, GameObject>();
 
-    private Sprite[] playerSprites;
-    private Sprite[] treeSprites;
+    private Sprite[] idleDown;
+    private Sprite[] idleUp;
+    private Sprite[] idleSide;
+    
+    private Sprite[] walkDown;
+    private Sprite[] walkUp;
+    private Sprite[] walkSide;
+    
+    public Sprite treeAliveSprite;
+    public Sprite treeStumpSprite;
 
     public TextMeshProUGUI uiText; // Texto do inventário (Arraste no editor)
     public TextMeshProUGUI rollText; // Texto do D20 (Arraste no editor)
@@ -22,12 +30,16 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Carrega as fatias cortadas do Sprite Editor automaticamente da pasta Resources
-        playerSprites = Resources.LoadAll<Sprite>("player");
-        treeSprites = Resources.LoadAll<Sprite>("objects");
+        idleDown = Resources.LoadAll<Sprite>("Idle_Down");
+        idleUp = Resources.LoadAll<Sprite>("Idle_Up");
+        idleSide = Resources.LoadAll<Sprite>("Idle_Side");
         
-        if (playerSprites.Length == 0) Debug.LogWarning("Fatias do Player não encontradas! Não esqueça de fatiar no Sprite Editor.");
-        if (treeSprites.Length == 0) Debug.LogWarning("Fatias das Árvores não encontradas! Não esqueça de fatiar no Sprite Editor.");
+        walkDown = Resources.LoadAll<Sprite>("Walk_Down");
+        walkUp = Resources.LoadAll<Sprite>("Walk_Up");
+        walkSide = Resources.LoadAll<Sprite>("Walk_Side");
+        
+        if (idleDown.Length == 0) Debug.LogWarning("Fatias do Idle_Down não encontradas! Não esqueça de fatiar no Sprite Editor.");
+        if (treeAliveSprite == null || treeStumpSprite == null) Debug.LogWarning("Árvore não configurada no Inspector do GameManager!");
         
         GenerateGrassBackground();
     }
@@ -91,13 +103,18 @@ public class GameManager : MonoBehaviour
                 var sr = pObj.AddComponent<SpriteRenderer>();
                 
                 // Pega a primeira fatia do player (Idle) se existir
-                if (playerSprites.Length > 0) sr.sprite = playerSprites[0];
+                if (idleDown != null && idleDown.Length > 0) sr.sprite = idleDown[0];
                 
                 // O local player pode ter uma cor ou tag diferente
                 if (pData.id == NetworkManager.Instance.myId)
                 {
                     var pc = pObj.AddComponent<PlayerController>(); // Anexa controle de movimento
-                    pc.sprites = playerSprites; // Passa os sprites fatiados para a animação
+                    pc.idleDown = idleDown;
+                    pc.idleUp = idleUp;
+                    pc.idleSide = idleSide;
+                    pc.walkDown = walkDown;
+                    pc.walkUp = walkUp;
+                    pc.walkSide = walkSide;
                     
                     // Adiciona física para detectar quando esbarra na árvore
                     var rb = pObj.AddComponent<Rigidbody2D>();
@@ -140,10 +157,13 @@ public class GameManager : MonoBehaviour
                 
                 tObj.transform.position = new Vector3(rData.x / 100f, -rData.y / 100f, 0);
                 
+                // Aumenta o tamanho da árvore para ficar proporcional ao boneco
+                tObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
+                
                 // Adiciona um BoxCollider2D (como Trigger) para o Player saber que chegou perto
                 var col = tObj.AddComponent<BoxCollider2D>();
                 col.isTrigger = true;
-                col.size = new Vector2(0.5f, 0.5f); // 50 pixels de raio
+                col.size = new Vector2(0.5f, 0.5f); // 50 pixels de largura/altura
                 
                 // Adiciona um pequeno script auxiliar para guardar a ID
                 var tagScript = tObj.AddComponent<ResourceTag>();
@@ -154,12 +174,11 @@ public class GameManager : MonoBehaviour
 
             // Atualiza Sprite (Viva vs Morta)
             var spr = treeObjects[rData.id].GetComponent<SpriteRenderer>();
-            if (treeSprites.Length > 0)
+            // Atualiza a imagem baseado no estado (ativo ou cortado)
+            if (treeAliveSprite != null && treeStumpSprite != null)
             {
-                // A árvore verde é a fatia [0], a árvore morta de inverno pode ser a fatia [3]
-                // Isso dependerá de como for fatiado no Sprite Editor!
-                if (rData.active) spr.sprite = treeSprites[0];
-                else spr.sprite = treeSprites[3]; 
+                if (rData.active) spr.sprite = treeAliveSprite;
+                else spr.sprite = treeStumpSprite; 
             }
         }
     }
